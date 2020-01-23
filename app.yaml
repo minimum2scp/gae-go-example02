@@ -1,0 +1,7 @@
+#
+# https://cloud.google.com/appengine/docs/standard/go111/config/appref?hl=en
+#
+
+runtime: go111
+service: gae-example-02
+
