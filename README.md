@@ -26,3 +26,26 @@ go build
 ```
 go test
 ```
+
+## Deploy to Google AppEngine by AppEngine Admin API
+
+### Prerequisites
+
+- Google Cloud SDK is installed
+  * `app-engine-go` component is installed
+  * Project ID is set by `gcloud config set project [YOUR-PROJECT-ID]`
+- Cloud Storage bucket `staging.[YOUR-PROJECT-ID].appspot.com` exist
+- Ruby is installed
+
+### Stage source files to Cloud Storage
+
+```shell
+./deploy-tools/stage.sh v1
+```
+
+### Create AppEngine version by AppEngine Admin API
+
+```shell
+./deploy-tools/create-version.sh v1
+```
+
