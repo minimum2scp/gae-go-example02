@@ -25,4 +25,5 @@
 *.out
 
 #!include:.gitignore
+/.github/
 
