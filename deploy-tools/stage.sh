@@ -45,7 +45,7 @@ ${go_app_stager} -go-version=${go_version} ${app_yaml} ${app_root} ${tmpdir}
 
 # upload files to Cloud Storage and generate manifest
 cd ${tmpdir}
-files=$(gcloud meta list-files-for-upload)
+files=$(gcloud meta list-files-for-upload | sort)
 for f in ${files}; do
   gsutil cp ${f} gs://${bucket}/${app_name}/${version}/${f}
 done
