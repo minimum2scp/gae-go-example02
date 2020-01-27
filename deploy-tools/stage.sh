@@ -26,7 +26,7 @@ if [ ! -x "${go_app_stager}" ]; then
   exit 1
 fi
 
-runtime=$(ruby -ryaml -e 'print YAML.load(ARGF.read).dig("runtime")' ${app_yaml})
+runtime=$(cat runtime)
 case "${runtime}" in
   go111)
     go_version=1.11;;

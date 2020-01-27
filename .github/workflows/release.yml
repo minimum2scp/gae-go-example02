@@ -20,19 +20,6 @@ jobs:
       # https://github.com/actions/checkout
       - uses: actions/checkout@v2
 
-      # https://github.com/actions/setup-ruby
-      - uses: actions/setup-ruby@v1
-        with:
-          ruby-version: '2.7'
-
-      - name: Check ruby version
-        run: |
-          set -x
-          ruby -v
-          gem -v
-          gem env
-          gem list
-
       # https://github.com/GoogleCloudPlatform/github-actions/tree/master/setup-gcloud
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
