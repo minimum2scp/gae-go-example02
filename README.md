@@ -33,7 +33,7 @@ go test
 
 - Google Cloud SDK is installed
   * `app-engine-go` component is installed
-  * Project ID is set by `gcloud config set project [YOUR-PROJECT-ID]`
+  * Project ID is set by `gcloud config set project [YOUR-PROJECT-ID]` or `export CLOUDSDK_CORE_PROJECT=[YOUR-PROJECT-ID]`
 - Cloud Storage bucket `staging.[YOUR-PROJECT-ID].appspot.com` exist
 - Ruby is installed
 
