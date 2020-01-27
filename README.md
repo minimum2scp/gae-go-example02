@@ -1,12 +1,14 @@
 # gae-go-example02
 Hello world app on AppEngine Go / Deploy with AppEngine Admin API
 
-## Prerequisites
+## Build / Run (local) / Test
+
+### Prerequisites
 
 - Go 1.11.x
 - Set environment variable `GO111MODULE=on`
 
-## Build / Run
+### Commands
 
 Run local web server without build:
 
@@ -21,7 +23,7 @@ go build
 ./gae-go-example02
 ```
 
-## Test
+Test:
 
 ```
 go test
