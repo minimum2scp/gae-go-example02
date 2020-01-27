@@ -2,7 +2,7 @@
 
 set -x
 
-app_name=$(basename $(git rev-parse --show-toplevel))
+app_name=$(basename -s .git $(git config --get remote.origin.url))
 app_root=$(realpath $(dirname $0)/..)
 app_yaml=${app_root}/app.yaml
 
