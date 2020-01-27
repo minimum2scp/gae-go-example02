@@ -4,7 +4,6 @@ set -x
 
 app_name=$(basename -s .git $(git config --get remote.origin.url))
 app_root=$(realpath $(dirname $0)/..)
-app_yaml=${app_root}/app.yaml
 
 project_id=$(gcloud config get-value project)
 bucket=staging.${project_id}.appspot.com
@@ -40,8 +39,11 @@ case "${runtime}" in
     ;;
 esac
 
+# create temporary app.yaml
+echo "runtime: ${runtime}" > ${app_root}/app.yaml
+
 # copy files into temporary directory using go-app-stager
-${go_app_stager} -go-version=${go_version} ${app_yaml} ${app_root} ${tmpdir}
+${go_app_stager} -go-version=${go_version} ${app_root}/app.yaml ${app_root} ${tmpdir}
 
 # upload files to Cloud Storage and generate manifest
 cd ${tmpdir}

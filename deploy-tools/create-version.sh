@@ -3,8 +3,6 @@
 set -x
 
 app_name=$(basename -s .git $(git config --get remote.origin.url))
-app_root=$(realpath $(dirname $0)/..)
-app_yaml=${app_root}/app.yaml
 
 project_id=$(gcloud config get-value project)
 bucket=staging.${project_id}.appspot.com
@@ -15,21 +13,26 @@ if [ "${version}" = "" ]; then
   exit 1
 fi
 
-# create temporary directory and copy app.yaml, download manifest file from cloud storage
+# create temporary directory
 tmpdir=$(mktemp -d)
 trap "rm -rfv ${tmpdir}" EXIT
+cp runtime ${tmpdir}/runtime
 cd ${tmpdir}
-cp -a ${app_yaml} ${tmpdir}
+
+# download manifest file from cloud storage
 manifest=gs://${bucket}/${app_name}/${version}/_manifest
 gsutil cp ${manifest} _manifest
 
-# convert app.yaml to app.json
+# create app.json (app.yaml)
+# https://cloud.google.com/appengine/docs/standard/go111/config/appref?hl=en
 ruby -ryaml -rjson -e '
-  conf = YAML.load(File.read(ARGV[0]))
-  manifest = File.readlines(ARGV[1])
-  bucket = ARGV[2]
-  app_name = ARGV[3]
-  version = ARGV[4]
+  runtime = File.read("runtime").strip
+  manifest = File.readlines("_manifest")
+  bucket = ARGV.shift
+  app_name = ARGV.shift
+  version = ARGV.shift
+  conf = {}
+  conf["runtime"] = runtime
   conf["id"] = Time.now.strftime("%Y%m%dt%H%M%S")
   conf["deployment"] = {
     "files" => manifest.map{|line| line.split }.map{|(sha1sum, filename)|
@@ -42,21 +45,12 @@ ruby -ryaml -rjson -e '
       ]
     }.to_h
   }
-  service = conf.delete("service")
-  File.open("app.json", "w"){|fh|
-    fh.puts JSON.pretty_generate(conf)
-  }
-  File.open("service.txt", "w"){|fh|
-    fh.puts service
-  }
-' app.yaml _manifest ${bucket} ${app_name} ${version}
-
-cat app.json
-cat service.txt
+  puts JSON.pretty_generate(conf)
+' ${bucket} ${app_name} ${version} | tee app.json
 
 # create version
 access_token=$(gcloud auth print-access-token)
-service=$(cat service.txt)
+service=${app_name}
 curl -X POST \
      -T "app.json" \
      -H "Content-Type: application/json" \
