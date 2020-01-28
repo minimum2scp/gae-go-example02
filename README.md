@@ -43,7 +43,7 @@ go test
 #### Command
 
 ```shell
-./deploy-tools/stage.sh v1
+./deploy-tools/stage.sh bucket v1
 ```
 
 ### Create AppEngine version by AppEngine Admin API
@@ -57,6 +57,6 @@ go test
 #### Command
 
 ```shell
-./deploy-tools/create-version.sh v1
+./deploy-tools/create-version.sh bucket v1
 ```
 

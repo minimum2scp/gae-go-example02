@@ -5,11 +5,11 @@ set -x
 app_name=$(basename -s .git $(git config --get remote.origin.url))
 
 project_id=$(gcloud config get-value project)
-bucket=staging.${project_id}.appspot.com
-version=$1
+bucket=$1
+version=$2
 
-if [ "${version}" = "" ]; then
-  echo "Usage: $0 version"
+if [ "${bucket}" = "" -o "${version}" = "" ]; then
+  echo "Usage: $0 bucket version"
   exit 1
 fi
 

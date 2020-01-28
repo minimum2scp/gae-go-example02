@@ -42,5 +42,9 @@ jobs:
           gcloud components list
 
       - name: Stage application code to Cloud Storage
-        run: ./deploy-tools/stage.sh $(basename ${{ github.ref }})
+        run: |
+          set -x
+          bucket=staging.${CLOUDSDK_CORE_PROJECT}.appspot.com
+          version=$(basename ${{ github.ref }})
+          ./deploy-tools/stage.sh ${bucket} ${version}
 
