@@ -1,6 +1,5 @@
 #! /bin/bash
 
-set -x
 set -eo pipefail
 
 app_name=$(basename -s .git $(git config --get remote.origin.url))
@@ -15,11 +14,32 @@ if [ -z "${bucket}" -o -z "${version}" ]; then
   exit 1
 fi
 
+gcs_version_path=gs://${bucket}/${app_name}/${version}
+
+echo ">>> app_name: ${app_name}"
+echo ">>> app_root: ${app_root}"
+echo ">>> project_id: ${project_id}"
+echo ">>> bucket: ${bucket}"
+echo ">>> version: ${version}"
+echo ">>> gcs_version_path: ${gcs_version_path}"
+
 # create temporary directory and clean up on exit
 tmpdir=$(mktemp -d)
 stagedir=$tmpdir/stage
 mkdir $stagedir
-trap "rm -rfv ${tmpdir}" EXIT
+trap "echo '>>> Cleanup'; rm -rfv ${tmpdir}" EXIT
+echo ">>> tmpdir: ${tmpdir}"
+echo ">>> stagedir: ${stagedir}"
+
+# create app.yaml in temporary directory
+runtime=$(cat runtime)
+echo "runtime: ${runtime}" > ${tmpdir}/app.yaml
+echo ">>> runtime: ${runtime}"
+
+# "goNNN" -> "N.NN"
+go_version=${runtime#go}
+go_version=${go_version::1}.${go_version:1}
+echo ">>> go_version: ${go_version}"
 
 # check if go-app-stager is installed
 go_app_stager=$(gcloud info --format='value(installation.sdk_root)')/platform/google_appengine/go-app-stager
@@ -28,29 +48,31 @@ if [ ! -x "${go_app_stager}" ]; then
   exit 1
 fi
 
-# create app.yaml in temporary directory
-runtime=$(cat runtime)
-echo "runtime: ${runtime}" > ${tmpdir}/app.yaml
-
-# "goNNN" -> "N.NN"
-go_version=${runtime#go}
-go_version=${go_version::1}.${go_version:1}
-
 # copy files into stage directory using go-app-stager
+echo ">>> Copy files by ${go_app_stager} into stagedir"
 ${go_app_stager} -go-version=${go_version} ${tmpdir}/app.yaml ${app_root} ${stagedir}
 
-# upload files to Cloud Storage and generate manifest
 cd ${stagedir}
-gcloud meta list-files-for-upload | sort | tee ${tmpdir}/files-for-upload
+
+# upload files to Cloud Storage
+echo ">>> Upload files to cloud storage"
+gcloud meta list-files-for-upload | sort > ${tmpdir}/files-for-upload
 cat ${tmpdir}/files-for-upload | while read f; do
-  gsutil -q cp ${f} gs://${bucket}/${app_name}/${version}/${f}
+  echo ">>> * ${PWD}/${f} -> ${gcs_version_path}/${f}"
+  gsutil -q cp ${f} ${gcs_version_path}/${f}
 done
 
 # upload manifest
-sha1sum $(cat ${tmpdir}/files-for-upload) | tee ${tmpdir}/_manifest
-gsutil -q cp ${tmpdir}/_manifest gs://${bucket}/${app_name}/${version}/_manifest
+echo ">>> Generate and upload menifest file to cloud storage"
+sha1sum $(cat ${tmpdir}/files-for-upload) > ${tmpdir}/_manifest
+echo ">>> * ${tmpdir}/_manifest -> ${gcs_version_path}/_manifest"
+gsutil -q cp ${tmpdir}/_manifest ${gcs_version_path}/_manifest
 
-# list uploaded objects and show manifest
-gsutil ls -l -r gs://${bucket}/${app_name}/${version}/
-gsutil cat gs://${bucket}/${app_name}/${version}/_manifest
+# list uploaded objects
+echo ">>> List objects in ${gcs_version_path}/"
+gsutil ls -l -r ${gcs_version_path}/
+
+# show manifest
+echo ">>> Show manifest content in ${gcs_version_path}/_manifest"
+gsutil cat ${gcs_version_path}/_manifest
 
