@@ -1,10 +1,11 @@
-#! /bin/sh
+#! /bin/bash
 
 set -x
+set -eo pipefail
 
 app_name=$(basename -s .git $(git config --get remote.origin.url))
-
 project_id=$(gcloud config get-value project)
+
 bucket=$1
 version=$2
 
@@ -13,39 +14,47 @@ if [ "${bucket}" = "" -o "${version}" = "" ]; then
   exit 1
 fi
 
-# create temporary directory
+# create temporary directory and clean up on exit
 tmpdir=$(mktemp -d)
 trap "rm -rfv ${tmpdir}" EXIT
+
+# copy file(s) to temporary directory
 cp runtime ${tmpdir}/runtime
-cd ${tmpdir}
 
 # download manifest file from cloud storage
+cd ${tmpdir}
 manifest=gs://${bucket}/${app_name}/${version}/_manifest
-gsutil cp ${manifest} _manifest
+gsutil -q cp ${manifest} _manifest
+
+cat _manifest
 
 # create app.json (app.yaml)
 # https://cloud.google.com/appengine/docs/standard/go111/config/appref?hl=en
-ruby -ryaml -rjson -e '
-  runtime = File.read("runtime").strip
-  manifest = File.readlines("_manifest")
+ruby -rjson -e '
   bucket = ARGV.shift
   app_name = ARGV.shift
   version = ARGV.shift
-  conf = {}
-  conf["runtime"] = runtime
-  conf["id"] = Time.now.strftime("%Y%m%dt%H%M%S")
-  conf["deployment"] = {
-    "files" => manifest.map{|line| line.split }.map{|(sha1sum, filename)|
-      [
-        filename,
-        {
-          "sourceUrl" => "https://storage.googleapis.com/#{bucket}/#{app_name}/#{version}/#{filename}",
-          "sha1Sum" => sha1sum,
-        }
-      ]
-    }.to_h
+
+  runtime = File.read("runtime").strip
+  manifest = File.read("_manifest").strip
+
+  fileinfo = manifest.split("\n").each_with_object({}) do |l, o|
+    sha1sum, path = l.split(/\s+/, 2)
+    o[path] = {
+      "sourceUrl" => "https://storage.googleapis.com/#{bucket}/#{app_name}/#{version}/#{path}",
+      "sha1Sum" => sha1sum
+    }
+  end
+
+  app = {
+    "runtime"    => runtime,
+    "id"         => Time.now.strftime("%Y%m%dt%H%M%S"),
+    "deployment" => {
+      "files" => fileinfo
+    }
   }
-  puts JSON.pretty_generate(conf)
+
+  puts JSON.pretty_generate(app)
 ' ${bucket} ${app_name} ${version} | tee app.json
 
 # create version
