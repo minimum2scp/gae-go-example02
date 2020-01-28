@@ -23,6 +23,12 @@ echo ">>> bucket: ${bucket}"
 echo ">>> version: ${version}"
 echo ">>> gcs_version_path: ${gcs_version_path}"
 
+# check if already uploaded
+if gsutil -q stat ${gcs_version_path}/_manifest; then
+  echo "Abort. Manifest file ${gcs_version_path}/_manifest is already uploaded."
+  exit 1
+fi
+
 # create temporary directory and clean up on exit
 tmpdir=$(mktemp -d)
 stagedir=$tmpdir/stage
