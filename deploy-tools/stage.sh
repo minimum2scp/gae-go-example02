@@ -48,10 +48,10 @@ ${go_app_stager} -go-version=${go_version} ${app_root}/app.yaml ${app_root} ${tm
 cd ${tmpdir}
 files=$(gcloud meta list-files-for-upload | sort)
 for f in ${files}; do
-  gsutil cp ${f} gs://${bucket}/${app_name}/${version}/${f}
+  gsutil -q cp ${f} gs://${bucket}/${app_name}/${version}/${f}
 done
 sha1sum ${files} > _manifest
-gsutil cp _manifest gs://${bucket}/${app_name}/${version}/_manifest
+gsutil -q cp _manifest gs://${bucket}/${app_name}/${version}/_manifest
 
 # list uploaded objects and show manifest
 gsutil ls -l -r gs://${bucket}/${app_name}/${version}/
