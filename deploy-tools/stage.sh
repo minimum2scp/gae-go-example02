@@ -54,3 +54,7 @@ done
 sha1sum ${files} > _manifest
 gsutil cp _manifest gs://${bucket}/${app_name}/${version}/_manifest
 
+# list uploaded objects and show manifest
+gsutil ls -l -r gs://${bucket}/${app_name}/${version}/
+gsutil cat gs://${bucket}/${app_name}/${version}/_manifest
+
