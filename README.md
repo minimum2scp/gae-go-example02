@@ -60,3 +60,7 @@ go test
 ./deploy-tools/create-version.sh bucket v1
 ```
 
+```shell
+gcloud app operations wait [OPERATION-ID]
+gcloud app versions migrate v1 --service=gae-go-example02
+```
