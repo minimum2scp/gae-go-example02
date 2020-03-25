@@ -41,7 +41,7 @@ echo ">>> stagedir2: ${stagedir2}"
 
 # load configuration file
 if [ ! -f $(dirname $0)/stage-config.sh ]; then
-  echo "stage-config.sh not found"
+  echo "stage-config.sh not found."
   exit 1
 fi
 
@@ -107,4 +107,3 @@ gsutil ls -l -r ${gcs_version_path}/
 # show manifest
 echo ">>> Show manifest content in ${gcs_version_path}/_manifest"
 gsutil cat ${gcs_version_path}/_manifest
-
