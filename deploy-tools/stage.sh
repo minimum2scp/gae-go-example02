@@ -34,7 +34,7 @@ tmpdir=$(mktemp -d)
 stagedir1=$tmpdir/stage1
 stagedir2=$tmpdir/stage2
 mkdir ${stagedir1} ${stagedir2}
-trap "echo '>>> Cleanup'; rm -rfv ${tmpdir}" EXIT
+trap "echo '>>> Cleanup'; rm -rf ${tmpdir}" EXIT
 echo ">>> tmpdir: ${tmpdir}"
 echo ">>> stagedir1: ${stagedir1}"
 echo ">>> stagedir2: ${stagedir2}"
